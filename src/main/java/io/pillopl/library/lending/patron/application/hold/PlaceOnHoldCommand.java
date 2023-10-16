@@ -28,7 +28,7 @@ public class PlaceOnHoldCommand {
 
     HoldDuration getHoldDuration() {
         return noOfDays
-                .map(NumberOfDays::of)
+                .map(arg0 -> NumberOfDays.of(arg0))
                 .map(HoldDuration::closeEnded)
                 .getOrElse(HoldDuration.openEnded());
     }

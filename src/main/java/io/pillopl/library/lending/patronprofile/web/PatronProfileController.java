@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -65,7 +66,7 @@ class PatronProfileController {
                 .toStream()
                 .map(hold -> resourceWithLinkToHoldSelf(patronId, hold))
                 .collect(toList());
-        return ResponseEntity.ok(new CollectionModel<>(holds, linkTo(methodOn(PatronProfileController.class).findHolds(patronId)).withSelfRel()));
+        return ResponseEntity.ok(CollectionModel.of(holds, linkTo(methodOn(PatronProfileController.class).findHolds(patronId)).withSelfRel()));
 
     }
 
@@ -86,7 +87,7 @@ class PatronProfileController {
                 .toStream()
                 .map(checkout -> resourceWithLinkToCheckoutSelf(patronId, checkout))
                 .collect(toList());
-        return ResponseEntity.ok(new CollectionModel<>(checkouts, linkTo(methodOn(PatronProfileController.class).findHolds(patronId)).withSelfRel()));
+        return ResponseEntity.ok(CollectionModel.of(checkouts, linkTo(methodOn(PatronProfileController.class).findHolds(patronId)).withSelfRel()));
     }
 
     @GetMapping("/profiles/{patronId}/checkouts/{bookId}")
@@ -98,7 +99,7 @@ class PatronProfileController {
     }
 
     @PostMapping("/profiles/{patronId}/holds")
-    ResponseEntity placeHold(@PathVariable UUID patronId, @RequestBody PlaceHoldRequest request) {
+    ResponseEntity<Object> placeHold(@PathVariable UUID patronId, @RequestBody PlaceHoldRequest request) {
         Try<Result> result = placingOnHold.placeOnHold(
                 new PlaceOnHoldCommand(
                         Instant.now(),
@@ -114,7 +115,7 @@ class PatronProfileController {
     }
 
     @DeleteMapping("/profiles/{patronId}/holds/{bookId}")
-    ResponseEntity cancelHold(@PathVariable UUID patronId, @PathVariable UUID bookId) {
+    ResponseEntity<Object> cancelHold(@PathVariable UUID patronId, @PathVariable UUID bookId) {
         Try<Result> result = cancelingHold.cancelHold(new CancelHoldCommand(Instant.now(), new PatronId(patronId), new BookId(bookId)));
         return result
                 .map(success -> ResponseEntity.noContent().build())
@@ -123,7 +124,7 @@ class PatronProfileController {
     }
 
     private EntityModel<Hold> resourceWithLinkToHoldSelf(UUID patronId, io.pillopl.library.lending.patronprofile.model.Hold hold) {
-        return new EntityModel<>(
+        return EntityModel.of(
                 new Hold(hold),
                 linkTo(methodOn(PatronProfileController.class).findHold(patronId, hold.getBook().getBookId()))
                         .withSelfRel()
@@ -132,7 +133,7 @@ class PatronProfileController {
     }
 
     private EntityModel<Checkout> resourceWithLinkToCheckoutSelf(UUID patronId, io.pillopl.library.lending.patronprofile.model.Checkout checkout) {
-        return new EntityModel<>(
+        return EntityModel.of(
                 new Checkout(checkout),
                 linkTo(methodOn(PatronProfileController.class).findCheckout(patronId, checkout.getBook().getBookId()))
                         .withSelfRel());
@@ -140,8 +141,8 @@ class PatronProfileController {
 }
 
 @Value
+@EqualsAndHashCode(callSuper = false)
 class ProfileResource extends RepresentationModel {
-
     UUID patronId;
 
     ProfileResource(UUID patronId) {
